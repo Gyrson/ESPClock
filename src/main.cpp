@@ -1,48 +1,37 @@
-/*
- *  This sketch demonstrates how to scan WiFi networks.
- *  The API is almost the same as with the WiFi Shield library,
- *  the most obvious difference being the different file you need to include:
- */
 #include "WiFi.h"
+#include <NTPClient.h>
+#include <WiFiUdp.h>
+#include "cred.h" //Create a File with the following entries: 
+                  //const char* ssid = "YourSSID";
+                  //const char* password =  "YourPassword";
 
-void setup()
-{
-    Serial.begin(115200);
+// Define NTP Client to get time
+WiFiUDP ntpUDP;
+NTPClient timeClient(ntpUDP);
+// Variables to save date and time
+String formattedDate;
+String dayStamp;
+String timeStamp;
 
-    // Set WiFi to station mode and disconnect from an AP if it was previously connected
-    WiFi.mode(WIFI_STA);
-    WiFi.disconnect();
-    delay(100);
+void setup(){
+  Serial.begin(115200);
+  delay(5000);
 
-    Serial.println("Setup done");
+  WiFi.begin(ssid, password);
+
+  while ( WiFi.status() != WL_CONNECTED ) {
+    delay ( 500 );
+    Serial.print ( "." );
+  }
+
+  timeClient.begin();
+  timeClient.setTimeOffset(7200);
 }
 
-void loop()
-{
-    Serial.println("scan start");
+void loop() {
+  timeClient.update();
 
-    // WiFi.scanNetworks will return the number of networks found
-    int n = WiFi.scanNetworks();
-    Serial.println("scan done");
-    if (n == 0) {
-        Serial.println("no networks found");
-    } else {
-        Serial.print(n);
-        Serial.println(" networks found");
-        for (int i = 0; i < n; ++i) {
-            // Print SSID and RSSI for each network found
-            Serial.print(i + 1);
-            Serial.print(": ");
-            Serial.print(WiFi.SSID(i));
-            Serial.print(" (");
-            Serial.print(WiFi.RSSI(i));
-            Serial.print(")");
-            Serial.println((WiFi.encryptionType(i) == WIFI_AUTH_OPEN)?" ":"*");
-            delay(10);
-        }
-    }
-    Serial.println("");
+  Serial.println(timeClient.getFormattedTime());
 
-    // Wait a bit before scanning again
-    delay(5000);
+  delay(1000);
 }
